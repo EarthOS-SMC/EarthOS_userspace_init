@@ -5,4 +5,4 @@ chmod +x build.sh
 if [ -d compiler ]; then
 	rm -rf compiler
 fi
-git clone https://github.com/adazem009/PowerSlash-userspace compiler
+git clone https://github.com/EarthOS/PowerSlash-userspace compiler
