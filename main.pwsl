@@ -27,7 +27,7 @@ print>
 <print
 set/"c",0
 while/[c == 0]
-	print/"init> "
+	print/\c"000255000",\b1,"init> ",\b0
 	read/"","in"
 	print/in,\n
 	if/[in == "help"]
@@ -38,6 +38,7 @@ while/[c == 0]
 			"poweroff - shutdown"
 			"reboot - restart computer"
 			"continue - continue boot"
+			"readvar - read a variable"
 			""
 			"This shell is very minimal. It reads the"
 			"whole command and doesn't recognize arguments."
@@ -65,8 +66,16 @@ while/[c == 0]
 						if/[in == "clear"]
 							clear
 						else
-							if/[in != ""]
-								print/in,": command not found",\n
+							if/[in == "readvar"]
+								print/"Variable name: "
+								read/"","name"
+								print/name,\n
+								readvar/name/"out"
+								print/"Value: ",out,\n
+							else
+								if/[in != ""]
+									print/in,": command not found",\n
+								endif
 							endif
 						endif
 					endif
