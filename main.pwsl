@@ -39,6 +39,7 @@ while/[c == 0]
 			"reboot - restart computer"
 			"continue - continue boot"
 			"readvar - read a variable"
+			"run - run a program"
 			""
 			"This shell is very minimal. It reads the"
 			"whole command and doesn't recognize arguments."
@@ -73,8 +74,21 @@ while/[c == 0]
 								readvar/name/"out"
 								print/"Value: ",out,\n
 							else
-								if/[in != ""]
-									print/in,": command not found",\n
+								if/[in == "run"]
+									print/"Binary: "
+									read/"","bin"
+									print/"Wait? (Y/N) "
+									read/"","wait"
+									print/wait,\n
+									if/[wait == "Y"]
+										run/bin,"wait"
+									else
+										run/bin,"bg"
+									endif
+								else
+									if/[in != ""]
+										print/in,": command not found",\n
+									endif
 								endif
 							endif
 						endif
