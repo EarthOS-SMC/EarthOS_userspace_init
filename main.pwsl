@@ -81,15 +81,16 @@ repeat/len
 		set/"min",num
 	else
 		getlistlength/"srv"/"len2"
-		set/"i2",0
-		while/[i2 < len2]
-			calc/"i2=i2+1"
+		set/"i2",len2
+		while/[i2 > 0]
 			getitem/"nums",i2/"it2"
 			if/[num >= it2]
 				calc/"tmp=i2+1"
 				insert/tmp,it/"srv"
 				insert/tmp,num/"nums"
+				set/"i2",1
 			endif
+			calc/"i2=i2-1"
 		endloop
 	endif
 endloop
