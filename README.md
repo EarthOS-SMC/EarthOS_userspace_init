@@ -15,7 +15,7 @@ Before the build process, you need to clone the PowerSlash compiler too:
 
 `chmod +x sync.sh && ./sync.sh`
 
-To build the bootloader,
+To build the init system,
 
 `./build.sh`
 
