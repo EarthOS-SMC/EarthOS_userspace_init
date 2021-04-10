@@ -2,8 +2,6 @@
 //
 //    Copyright (C) 2021  adazem009
 //
-// This is a temporary init shell; it'll be replaced by a complete init system later.
-//
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
 //    the Free Software Foundation, either version 3 of the License, or
@@ -17,102 +15,164 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-print>
-	""
-	"Welcome to EarthOS!"
-	""
-	"This is a WIP, we have only a few things working..."
-	"You can use a minimal shell below."
-	""
-<print
-set/"c",0
-while/[c == 0]
-	print/\c"000255000",\b1,"init> ",\b0
-	read/"","in"
-	print/in,\n
-	if/[in == "help"]
-		print>
-			"Supported commands:"
-			"clear - clear screen"
-			"exit - quit shell"
-			"poweroff - shutdown"
-			"reboot - restart computer"
-			"continue - continue boot"
-			"readvar - read a variable"
-			"run - run a program"
-			""
-			"This shell is very minimal. It reads the"
-			"whole command and doesn't recognize arguments."
-		<print
-	else
-		if/[in == "continue"]
-			set/"c",1
+// Functions
+// TO-DO: Switch to linkdef if possible!
+define/"OK"
+{
+	// OK/[message]
+	getitem/"arg_1",1/"in"
+	print/"[ ",\c"000255000","OK",\c255255255,"] ",in,\n
+}
+define/"FAIL"
+{
+	// FAIL/[message]
+	getitem/"arg_1",1/"in"
+	print/"[ ",\c255000000,"FAIL",\c255255255,"] ",in,\n
+}
+define/"srvOK"
+{
+	// srvOK/[service name]
+	getitem/"arg_1",1/"in"
+	print/"[ ",\c"000255000","OK",\c255255255,"] Started ",\b1,in,\b0,\n
+}
+define/"srvFAIL"
+{
+	// srvFAIL/[service name]
+	getitem/"arg_1",1/"in"
+	print/"[ ",\c255000000,"FAIL",\c255255255,"] Failed to start ",\b1,in,\b0,\n
+}
+// pid must be 1
+if/[%pid != 1]
+	print/"Init must be ran as pid 1!",\n
+	exit
+endif
+// User must be root
+if/[%whoami != "root"]
+	print/"Init must be ran as root!",\n
+	exit
+endif
+// Welcome message
+print/"*** EarthOS init system ***",\n
+// Config
+set/"srvpath","/etc/init.d"
+// List services
+ls/srvpath/"raw_srv"
+// Sort services
+setlist/"srv","nums"
+getlistlength/"raw_srv"/"len"
+set/"i",0/"min","Infinity"
+repeat/len
+	calc/"i=i+1"
+	getitem/"raw_srv",i/"it"
+	getlength/it/"len2"
+	set/"num",""/"i2",0
+	while/[i2 < len2]
+		calc/"i2=i2+1"
+		getletter/it,i2/"let"
+		if/[let == "-"]
+			set/"i2",len2
 		else
-			if/[in == "exit"]
-				print/"This program is PID 1, are you sure? (Y/N) "
-				read/"","yn"
-				print/yn,\n
-				if/[yn == "Y"]
-					exit
-				else
-					print/"Keeping shell running...",\n
-				endif
+			set/"num",num,let
+		endif
+	endloop
+	if/[num < min]
+		insert/1,it/"srv"
+		insert/1,num/"nums"
+		set/"min",num
+	else
+		getlistlength/"srv"/"len2"
+		set/"i2",0
+		while/[i2 < len2]
+			calc/"i2=i2+1"
+			getitem/"nums",i2/"it2"
+			if/[num >= it2]
+				calc/"tmp=i2+1"
+				insert/tmp,it/"srv"
+				insert/tmp,num/"nums"
+			endif
+		endloop
+	endif
+endloop
+// Start services
+getlistlength/"srv"/"len"
+if/[len == 0]
+	print/"Error: No services found",\n
+	exit
+endif
+set/"i",0
+repeat/len
+	calc/"i=i+1"
+	getitem/"srv",i/"name"
+	set/"path",srvpath,"/",name
+	getfile/path/"file"
+	// Read service
+	getlistlength/"file"/"len2"
+	mod/len2,2/"mod"
+	set/"inv",0
+	if/[mod != 0]
+		set/"inv",1
+	else
+		div/len2,2/"len2"
+		setlist/"atts","vals"
+		set/"i2",0
+		repeat/len2
+			calc/"i2=i2+1"
+			// Attribute name
+			getitem/"file",i2/"att"
+			// Attribute value
+			calc/"i2=i2+1"
+			getitem/"file",i2/"val"
+			// Add attribute
+			append/att/"atts"
+			append/val/"vals"
+		endloop
+		// Check name
+		getindex/"atts","name"/"ix"
+		getitem/"vals",ix/"name"
+		if/[name == ""]
+			set/"inv",1
+		else
+			// Check exec
+			getindex/"atts","exec"/"ix"
+			getitem/"vals",ix/"exec"
+			if/[name == ""]
+				set/"inv",1
 			else
-				if/[in == "poweroff"] or [in == "shutdown"]
-					shutdown
+				// Check user
+				getindex/"atts","user"/"ix"
+				getitem/"vals",ix/"user"
+				getusers/"users"
+				getindex/"users",user/"ix"
+				wait/1
+				if/[ix == 0]
+					set/"inv",1
 				else
-					if/[in == "reboot"]
-						reboot
+					// Start service
+					print/"Starting ",\b1,name,\b0,\n
+					getfile/exec/"file"
+					listtobin/"file"/"bin"
+					getindex/"atts","wait"/"ix"
+					getitem/"vals",ix/"wait"
+					if/[wait == "false"] or [wait != "true"]
+						run/bin,"bg",user
+						wait/wait
 					else
-						if/[in == "clear"]
-							clear
-						else
-							if/[in == "readvar"]
-								print/"Variable name: "
-								read/"","name"
-								print/name,\n
-								readvar/name/"out"
-								print/"Value: ",out,\n
-							else
-								if/[in == "run"]
-									print/"Binary: ",\n
-									read/"","bin"
-									print/"Wait? (Y/N) "
-									read/"","wait"
-									print/wait,\n
-									if/[wait == "Y"]
-										run/bin,"wait"
-									else
-										run/bin,"bg"
-									endif
-								else
-									if/[in != ""]
-										print/in,": command not found",\n
-									endif
-								endif
-							endif
-						endif
+						run/bin,"wait",user
 					endif
+					srvOK/name
 				endif
 			endif
 		endif
 	endif
+	if/[inv == 1]
+		set/"msg","Invalid service in ",path
+		FAIL/msg
+	endif
 endloop
-getfile/"/etc/release"/"rel"
-getitem/"rel",1/"uname"
-getitem/"rel",2/"ver"
-print/\b1,\c"000125255","Welcome to ",uname," ",ver,"!",\b0,\n,\n
-print>
-	"Ok, this is all we have done"
-	"in the init system."
-	""
-	"We'll continue to work on it"
-	"and make it read files"
-	"from /etc/init.d"
-	"like in SysV init."
-	"Yes, we won't take inspiration"
-	"from systemd :P"
-	""
-	"Just don't get scared by the"
-	"kernel panic below ;)"
-<print
+// Wait for stop request
+// ...maybe I'll move this to another process, but we don't
+// have linkdefs supported yet...
+// WIP - coming soon
+while/[true]
+	wait/1000
+endloop
