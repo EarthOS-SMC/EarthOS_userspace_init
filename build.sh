@@ -6,6 +6,7 @@ if [[ "$2" == '' ]]; then
 else
 	compiler="$2"
 fi
+auto="$3"
 cd "$(dirname $BASH_SOURCE)"
 if ! [ -d "$compiler" ]; then
 	echo "Error: PowerSlash compiler not found. Did you run sync.sh?"
@@ -46,7 +47,7 @@ if ! [ -f "../${name}.$ext" ]; then
 	exit 3
 fi
 echo "Compiling ${name}.$ext"
-./compile.sh "../${name}.$ext" "$reduce"
+./compile.sh "../${name}.$ext" "$reduce" "" "$auto"
 sv=$?
 if (( $sv != 0 )); then
 	exit $sv
