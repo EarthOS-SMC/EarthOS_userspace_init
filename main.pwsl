@@ -15,32 +15,7 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-// Functions
-// TO-DO: Switch to linkdef if possible!
-define/"OK"
-{
-	// OK/[message]
-	getitem/"arg_1",1/"in"
-	print/"[ ",\c"000255000","OK",\c255255255,"] ",in,\n
-}
-define/"FAIL"
-{
-	// FAIL/[message]
-	getitem/"arg_1",1/"in"
-	print/"[ ",\c255000000,"FAIL",\c255255255,"] ",in,\n
-}
-define/"srvOK"
-{
-	// srvOK/[service name]
-	getitem/"arg_1",1/"in"
-	print/"[ ",\c"000255000","OK",\c255255255,"] Started ",\b1,in,\b0,\n
-}
-define/"srvFAIL"
-{
-	// srvFAIL/[service name]
-	getitem/"arg_1",1/"in"
-	print/"[ ",\c255000000,"FAIL",\c255255255,"] Failed to start ",\b1,in,\b0,\n
-}
+include/"messages.pwsl"
 // pid must be 1
 if/[%pid != 1]
 	print/"Init must be ran as pid 1!",\n
@@ -171,8 +146,6 @@ repeat/len
 	endif
 endloop
 // Wait for stop request
-// ...maybe I'll move this to another process, but we don't
-// have linkdefs supported yet...
 // WIP - coming soon
 while/[true]
 	wait/1000
