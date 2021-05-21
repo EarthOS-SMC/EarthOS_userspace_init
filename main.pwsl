@@ -18,12 +18,12 @@
 include/"messages.pwsl"
 // pid must be 1
 if/[%pid != 1]
-	print/"Init must be ran as pid 1!",\n
+	print/"Init must be run as pid 1!",\n
 	exit
 endif
 // User must be root
 if/[%whoami != "root"]
-	print/"Init must be ran as root!",\n
+	print/"Init must be run as root!",\n
 	exit
 endif
 // Welcome message
