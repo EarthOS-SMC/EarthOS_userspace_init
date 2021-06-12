@@ -28,13 +28,6 @@ if/[%whoami != "root"]
 endif
 // Welcome message
 print/"*** EarthOS init system ***",\n
-// Reset power-trigger
-getfile/"/var/init.d/power-trigger"/"file"
-getitem/"file",1/"trg"
-if/[trg != 0]
-	replace/1,0/"file"
-	write/"/var/init.d/power-trigger"/"file"
-endif
 // Config
 set/"srvpath","/etc/init.d"
 // List services
@@ -152,24 +145,7 @@ repeat/len
 		FAIL/msg
 	endif
 endloop
-// Listen for /var/init.d/power-trigger calls.
-set/"trg",0
-while/[trg == 0]
-	wait/10
-	getfile/"/var/init.d/power-trigger"/"file"
-	getitem/"file",1/"trg"
+// System calls for poweroff and reboot are coming soon
+// Run an infinite loop for now
+while/[true]
 endloop
-// Init won't do much there... COMING SOON
-if/[trg == 1]
-	// Shutdown
-	shutdown
-else
-	if/[trg == 2]
-		// Reboot
-		reboot
-	else
-		set/"msg","Unknown power call '",trg,"'"
-		kmsg/"init",255000000,msg
-	endif
-endif
-kmsg/"init",255000000,"Init crashed! No info available... :("
