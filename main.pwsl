@@ -133,15 +133,10 @@ repeat/len
 				else
 					// Start service
 					print/"Starting ",\b1,name,\b0,\n
-					ftest/exec,"r","f"/"test"
+					ftest/exec,"rx","f"/"test"
 					set/"ret",%returnc
 					if/[ret != ""]
-						set/"msg","Failed to read '",exec,"' (",ret,")"/"fail",1
-						FAIL/msg
-					endif
-					ftest/exec,"x","f"/"test"
-					set/"ret",%returnc
-					if/[ret != ""]
+						// TO-DO: Display full error description instead of error code.
 						set/"msg","Failed to execute '",exec,"' (",ret,")"/"fail",1
 						FAIL/msg
 					endif
