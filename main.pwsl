@@ -30,6 +30,14 @@ endif
 print/"*** EarthOS init system ***",\n
 // Config
 set/"srvpath","/etc/init.d"
+// Check if the service dir exists
+ftest/srvpath,"r","d"/"test"
+set/"ret",%returnc
+if/[ret != ""]
+	set/"msg","Failed to read files from '",srvpath,"' (",ret,")"
+	FAIL/msg
+	exit
+endif
 // List services
 ls/srvpath/"raw_srv"
 // Sort services
@@ -84,7 +92,7 @@ repeat/len
 	// Read service
 	getlistlength/"file"/"len2"
 	mod/len2,2/"mod"
-	set/"inv",0
+	set/"inv",0/"fail",0
 	if/[mod != 0]
 		set/"inv",1
 	else
@@ -125,17 +133,33 @@ repeat/len
 				else
 					// Start service
 					print/"Starting ",\b1,name,\b0,\n
-					getfile/exec/"file"
-					listtobin/"file"/"bin"
-					getindex/"atts","wait"/"ix"
-					getitem/"vals",ix/"wait"
-					if/[wait == "false"] or [wait != "true"]
-						run/bin,"bg",user
-						wait/wait
-					else
-						run/bin,"wait",user
+					ftest/exec,"r","f"/"test"
+					set/"ret",%returnc
+					if/[ret != ""]
+						set/"msg","Failed to read '",exec,"' (",ret,")"/"fail",1
+						FAIL/msg
 					endif
-					srvOK/name
+					ftest/exec,"x","f"/"test"
+					set/"ret",%returnc
+					if/[ret != ""]
+						set/"msg","Failed to execute '",exec,"' (",ret,")"/"fail",1
+						FAIL/msg
+					endif
+					if/[fail == 0]
+						getfile/exec/"file"
+						listtobin/"file"/"bin"
+						getindex/"atts","wait"/"ix"
+						getitem/"vals",ix/"wait"
+						if/[wait == "false"] or [wait != "true"]
+							run/bin,"bg",user
+							wait/wait
+						else
+							run/bin,"wait",user
+						endif
+						srvOK/name
+					else
+						srvFAIL/name
+					endif
 				endif
 			endif
 		endif
