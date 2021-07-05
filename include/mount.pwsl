@@ -1,0 +1,70 @@
+// EarthOS init system
+//
+//    Copyright (C) 2021  adazem009
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+linkdef/"mountall"
+{
+	// mountall/[fstab path]
+	getitem/"arg_1",1/"fstabp"
+	print/"Mounting filesystems...",\n
+	ftest/fstabp,"r","f"/"test"
+	set/"ret",%returnc
+	if/[ret != ""]
+		exit
+	endif
+	getfile/fstabp/"fstab"
+	// Read every line
+	getlistlength/"fstab"/"len"
+	set/"i",0
+	repeat/len
+		calc/"i=i+1"
+		getitem/"fstab",i/"line"
+		getletter/line,1/"let"
+		if/[let != "#"]
+			setlist/"parts"
+			getlength/line/"len2"
+			set/"part",""/"i2",0
+			repeat/len2
+				calc/"i2=i2+1"
+				getletter/line,i2/"let"
+				set/"sp"," "
+				if/[let == sp]
+					append/part/"parts"
+					set/"part",""
+				else
+					set/"part",part,let
+				endif
+			endloop
+			append/part/"parts"
+			// Device/filesystem
+			getitem/"parts",1/"fs"
+			// Mount point
+			getitem/"parts",2/"pnt"
+			// Mode
+			getitem/"parts",3/"md"
+			print/"Mounting ",fs," at ",pnt," (",md,")",\n
+			mount/fs,pnt,md
+			set/"ret",%returnc
+			if/[ret != ""]
+				if/[pnt == "/"]
+					set/"ret",""
+				else
+					exit
+				endif
+			endif
+		endif
+	endloop
+}

@@ -16,6 +16,7 @@
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 include/"messages.pwsl"
+include/"mount.pwsl"
 // pid must be 1
 if/[%pid != 1]
 	print/"Init must be run as pid 1!",\n
@@ -29,7 +30,14 @@ endif
 // Welcome message
 print/"*** EarthOS init system ***",\n
 // Config
-set/"srvpath","/etc/init.d"
+set/"srvpath","/etc/init.d"/"fstab_path","/etc/fstab"
+// Mount filesystems specified in fstab
+mountall/fstab_path
+if/[ret != ""]
+	set/"msg","Failed to mount the filesystem: ",ret
+	FAIL/msg
+	exit
+endif
 // Check if the service dir exists
 ftest/srvpath,"r","d"/"test"
 set/"ret",%returnc
