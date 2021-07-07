@@ -34,6 +34,7 @@ set/"srvpath","/etc/init.d"/"fstab_path","/etc/fstab"
 // Mount filesystems specified in fstab
 mountall/fstab_path
 if/[ret != ""]
+	geterror/ret,0/"ret"
 	set/"msg","Failed to mount the filesystem: ",ret
 	FAIL/msg
 	exit
@@ -42,6 +43,7 @@ endif
 ftest/srvpath,"r","d"/"test"
 set/"ret",%returnc
 if/[ret != ""]
+	geterror/ret,0/"ret"
 	set/"msg","Failed to read files from '",srvpath,"' (",ret,")"
 	FAIL/msg
 	exit
@@ -144,7 +146,7 @@ repeat/len
 					ftest/exec,"rx","f"/"test"
 					set/"ret",%returnc
 					if/[ret != ""]
-						// TO-DO: Display full error description instead of error code.
+						geterror/ret,0/"ret"
 						set/"msg","Failed to execute '",exec,"' (",ret,")"/"fail",1
 						FAIL/msg
 					endif
