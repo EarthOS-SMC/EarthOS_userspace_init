@@ -21,8 +21,9 @@ linkdef/"mountall"
 	getitem/"arg_1",1/"fstabp"
 	print/"Mounting filesystems...",\n
 	ftest/fstabp,"r","f"/"test"
-	set/"ret",%returnc
+	set/"ret",%returnc/"rsn","fstab"
 	if/[ret != ""]
+		set/"rsn","fstab"
 		exit
 	endif
 	getfile/fstabp/"fstab"

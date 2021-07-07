@@ -35,7 +35,11 @@ set/"srvpath","/etc/init.d"/"fstab_path","/etc/fstab"
 mountall/fstab_path
 if/[ret != ""]
 	geterror/ret,0/"ret"
-	set/"msg","Failed to mount the filesystem: ",ret
+	if/[rsn == "fstab"]
+		set/"msg",fstab_path,": ",ret
+	else
+		set/"msg","Failed to mount the filesystem: ",ret
+	endif
 	FAIL/msg
 	exit
 endif
