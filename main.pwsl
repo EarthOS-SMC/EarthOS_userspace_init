@@ -43,17 +43,15 @@ if/[ret != ""]
 	FAIL/msg
 	exit
 endif
-// Check if the service dir exists
-ftest/srvpath,"r","d"/"test"
+// List services
+ls/srvpath/"raw_srv"
 set/"ret",%returnc
 if/[ret != ""]
 	geterror/ret,0/"ret"
-	set/"msg","Failed to read files from '",srvpath,"' (",ret,")"
+	set/"msg",srvpath,": ",ret
 	FAIL/msg
 	exit
 endif
-// List services
-ls/srvpath/"raw_srv"
 // Sort services
 setlist/"srv","nums"
 getlistlength/"raw_srv"/"len"
@@ -103,79 +101,86 @@ repeat/len
 	getitem/"srv",i/"name"
 	set/"path",srvpath,"/",name
 	getfile/path/"file"
-	// Read service
-	getlistlength/"file"/"len2"
-	mod/len2,2/"mod"
-	set/"inv",0/"fail",0
-	if/[mod != 0]
-		set/"inv",1
+	set/"ret",%returnc
+	if/[ret != ""]
+		geterror/ret,0/"ret"
+		set/"msg",path,": ",ret
+		FAIL/msg
 	else
-		div/len2,2/"len2"
-		setlist/"atts","vals"
-		set/"i2",0
-		repeat/len2
-			calc/"i2=i2+1"
-			// Attribute name
-			getitem/"file",i2/"att"
-			// Attribute value
-			calc/"i2=i2+1"
-			getitem/"file",i2/"val"
-			// Add attribute
-			append/att/"atts"
-			append/val/"vals"
-		endloop
-		// Check name
-		getindex/"atts","name"/"ix"
-		getitem/"vals",ix/"name"
-		if/[name == ""]
+		// Read service
+		getlistlength/"file"/"len2"
+		mod/len2,2/"mod"
+		set/"inv",0/"fail",0
+		if/[mod != 0]
 			set/"inv",1
 		else
-			// Check exec
-			getindex/"atts","exec"/"ix"
-			getitem/"vals",ix/"exec"
+			div/len2,2/"len2"
+			setlist/"atts","vals"
+			set/"i2",0
+			repeat/len2
+				calc/"i2=i2+1"
+				// Attribute name
+				getitem/"file",i2/"att"
+				// Attribute value
+				calc/"i2=i2+1"
+				getitem/"file",i2/"val"
+				// Add attribute
+				append/att/"atts"
+				append/val/"vals"
+			endloop
+			// Check name
+			getindex/"atts","name"/"ix"
+			getitem/"vals",ix/"name"
 			if/[name == ""]
 				set/"inv",1
 			else
-				// Check user
-				getindex/"atts","user"/"ix"
-				getitem/"vals",ix/"user"
-				getusers/"users"
-				getindex/"users",user/"ix"
-				wait/1
-				if/[ix == 0]
+				// Check exec
+				getindex/"atts","exec"/"ix"
+				getitem/"vals",ix/"exec"
+				if/[name == ""]
 					set/"inv",1
 				else
-					// Start service
-					print/"Starting ",\b1,name,\b0,\n
-					ftest/exec,"rx","f"/"test"
-					set/"ret",%returnc
-					if/[ret != ""]
-						geterror/ret,0/"ret"
-						set/"msg","Failed to execute '",exec,"' (",ret,")"/"fail",1
-						FAIL/msg
-					endif
-					if/[fail == 0]
-						getfile/exec/"file"
-						listtobin/"file"/"bin"
-						getindex/"atts","wait"/"ix"
-						getitem/"vals",ix/"wait"
-						if/[wait == "false"] or [wait != "true"]
-							run/bin,"bg",user
-							wait/wait
-						else
-							run/bin,"wait",user
-						endif
-						srvOK/name
+					// Check user
+					getindex/"atts","user"/"ix"
+					getitem/"vals",ix/"user"
+					getusers/"users"
+					getindex/"users",user/"ix"
+					wait/1
+					if/[ix == 0]
+						set/"inv",1
 					else
-						srvFAIL/name
+						// Start service
+						print/"Starting ",\b1,name,\b0,\n
+						ftest/exec,"rx","f"/"test"
+						set/"ret",%returnc
+						if/[ret != ""]
+							geterror/ret,0/"ret"
+							set/"msg","Failed to execute '",exec,"' (",ret,")"/"fail",1
+							FAIL/msg
+						endif
+						if/[fail == 0]
+							getfile/exec/"file"
+							listtobin/"file"/"bin"
+							getindex/"atts","wait"/"ix"
+							getitem/"vals",ix/"wait"
+							if/[wait == "false"] or [wait != "true"]
+								run/bin,"bg",user
+								wait/wait
+							else
+								run/bin,"wait",user
+							endif
+							srvOK/name
+						else
+							srvFAIL/name
+						endif
 					endif
 				endif
 			endif
 		endif
-	endif
-	if/[inv == 1]
-		set/"msg","Invalid service in ",path
-		FAIL/msg
+		if/[inv == 1]
+			set/"msg","Invalid service in ",path
+			FAIL/msg
+		endif
 	endif
 endloop
 // System calls for poweroff and reboot are coming soon
